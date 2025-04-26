@@ -6,7 +6,7 @@ app = FastAPI()
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to YouTube Transcript API!"}
+    return {"message": "YouTube Transcript API is working!"}
 
 @app.get("/transcript/{video_id}")
 def get_transcript(video_id: str):
@@ -18,23 +18,23 @@ def get_transcript(video_id: str):
             transcript = transcript_list.find_manually_created_transcript(['en'])
         except NoTranscriptFound:
             try:
-                # Try auto-generated English transcript
                 transcript = transcript_list.find_generated_transcript(['en'])
             except NoTranscriptFound:
-                # Final fallback: Hindi transcript (auto-generated)
                 transcript = transcript_list.find_transcript(['hi'])
 
         data = transcript.fetch()
 
-        # Remove empty text or just "[Music]" and strip whitespace
-        lines = [entry['text'].strip() for entry in data if entry.get('text') and entry['text'].strip() != '[Music]']
+        # Corrected: FetchedTranscriptSnippet is not a dict — use dot notation
+        lines = [
+            t.text.strip() for t in data
+            if hasattr(t, "text") and t.text.strip() != "[Music]"
+        ]
+
         return {"text": lines}
 
     except TranscriptsDisabled:
         return {"error": "Transcripts are disabled for this video"}
-
     except NoTranscriptFound:
         return {"error": "Transcript not available in English or Hindi"}
-
     except Exception as e:
         return {"error": str(e)}
